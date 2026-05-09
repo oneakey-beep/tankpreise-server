@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tankpreise</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f0f0f;color:#e8e8e6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding:1.5rem 1rem}
+.wrap{max-width:640px;margin:0 auto}
+.header{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem}
+.header svg{width:20px;height:20px;stroke:#888;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.header h1{font-size:18px;font-weight:500;color:#e8e8e6}
+.panel{background:#1a1a1a;border:0.5px solid #2a2a2a;border-radius:14px;padding:1.25rem;margin-bottom:1rem}
+.search-row{display:flex;gap:8px}
+.search-row input{flex:1;height:38px;background:#111;border:0.5px solid #2e2e2e;border-radius:9px;padding:0 12px;font-size:14px;color:#e8e8e6;outline:none}
+.search-row input:focus{border-color:#444}
+.search-row input::placeholder{color:#555}
+.icon-btn{height:38px;width:38px;background:#1f1f1f;border:0.5px solid #2e2e2e;border-radius:9px;color:#aaa;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.icon-btn:hover{background:#252525;color:#ddd}
+.icon-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.search-btn{height:38px;padding:0 16px;background:#e8e8e6;border:none;border-radius:9px;color:#111;font-size:13px;font-weight:500;cursor:pointer}
+.search-btn:hover{background:#d0d0ce}
+.tabs{display:flex;gap:6px;margin-top:1rem}
+.tab{padding:6px 16px;border-radius:8px;border:0.5px solid #2e2e2e;background:transparent;color:#666;font-size:13px;cursor:pointer}
+.tab.active{background:#e8e8e6;color:#111;border-color:#e8e8e6;font-weight:500}
+.controls{display:flex;gap:1.5rem;margin-top:1rem;align-items:center;flex-wrap:wrap}
+.ctrl{display:flex;align-items:center;gap:8px}
+.ctrl label{font-size:12px;color:#555}
+.ctrl span{font-size:13px;font-weight:500;color:#aaa;min-width:36px}
+.ctrl input[type=range]{width:90px;accent-color:#e8e8e6}
+.ctrl select{font-size:13px;padding:5px 8px;border-radius:8px;border:0.5px solid #2e2e2e;background:#111;color:#aaa;cursor:pointer;outline:none}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
+.stat{background:#1a1a1a;border:0.5px solid #222;border-radius:10px;padding:.875rem 1rem}
+.stat-lbl{font-size:11px;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.stat-val{font-size:20px;font-weight:500;color:#e8e8e6}
+.stat-val sup{font-size:11px}
+.stat-sub{font-size:11px;color:#444;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.count{font-size:12px;color:#444;margin-bottom:.5rem}
+.list{display:flex;flex-direction:column;gap:5px}
+.scard{background:#1a1a1a;border:0.5px solid #222;border-radius:11px;overflow:hidden}
+.scard.best{border-left:2px solid #3db87a;border-radius:0 11px 11px 0}
+.scard-top{padding:.875rem 1rem;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none}
+.scard-top:hover .sname{color:#fff}
+.rank{font-size:11px;color:#3a3a3a;min-width:16px;text-align:center}
+.sinfo{flex:1;min-width:0}
+.sname{font-size:14px;font-weight:500;color:#ddd;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s}
+.saddr{font-size:12px;color:#555;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sright{text-align:right;flex-shrink:0}
+.price{font-size:20px;font-weight:500;color:#e8e8e6}
+.price sup{font-size:11px}
+.dist{font-size:12px;color:#555;margin-top:2px}
+.open{font-size:11px;color:#3db87a;margin-top:2px}
+.closed{font-size:11px;color:#d85a30;margin-top:2px}
+.badge-cheap{display:inline-block;font-size:10px;padding:2px 7px;border-radius:6px;margin-left:6px;vertical-align:middle;background:#0d2e1f;color:#3db87a}
+.chart-wrap{border-top:0.5px solid #1e1e1e;padding:1rem}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.chart-title{font-size:12px;color:#555}
+.chart-ctrl{display:flex;align-items:center;gap:6px}
+.chart-ctrl label{font-size:11px;color:#555}
+.chart-ctrl span{font-size:11px;color:#888;min-width:40px}
+.chart-ctrl input[type=range]{width:70px;accent-color:#3db87a}
+.chart-container{position:relative;height:90px}
+.chart-hint{font-size:11px;color:#3a3a3a;text-align:center;padding:1.75rem 0;line-height:1.6}
+.status{text-align:center;padding:3rem 1rem;color:#444;font-size:14px}
+.err{padding:.875rem 1.125rem;color:#e07a5f;font-size:13px;background:#1e1410;border-radius:9px;border:0.5px solid #3a2010}
+.rec-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3db87a;margin-right:5px;vertical-align:middle;opacity:.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M3 11h12"/><path d="M17 22V11l4-4"/><path d="M17 7h2a2 2 0 0 1 2 2v2a1 1 0 0 1-1 1h-1"/></svg>
+    <h1>Tankpreise</h1>
+  </div>
+
+  <div class="panel">
+    <div class="search-row">
+      <input type="text" id="cityInput" placeholder="Stadt oder PLZ &#8230;" value="Stuttgart" />
+      <button class="icon-btn" onclick="useLocation()" title="Standort">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+      </button>
+      <button class="search-btn" onclick="fetchStations()">Suchen</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="setFuel('e5',this)">Super E5</button>
+      <button class="tab" onclick="setFuel('e10',this)">Super E10</button>
+      <button class="tab" onclick="setFuel('diesel',this)">Diesel</button>
+    </div>
+    <div class="controls">
+      <div class="ctrl">
+        <label>Umkreis</label>
+        <input type="range" min="1" max="25" value="5" step="1" id="radiusSlider"
+               oninput="document.getElementById('radiusVal').textContent=this.value+' km'">
+        <span id="radiusVal">5 km</span>
+      </div>
+      <div class="ctrl">
+        <label>Sortierung</label>
+        <select id="sortSelect" onchange="renderStations()">
+          <option value="price">Preis</option>
+          <option value="dist">Entfernung</option>
+          <option value="name">Name</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="statsRow" class="stats" style="display:none"></div>
+  <div id="resultCount" class="count"></div>
+  <div id="stationList" class="list">
+    <div class="status">Stadt eingeben und auf Suchen tippen.</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const API_KEY     = 'f8fb6efd-3038-49bf-b978-acd4c90b0fec';
+const HISTORY_URL = 'https://tankpreise-server-production.up.railway.app';
+
+let currentFuel = 'e5', allStations = [], currentLat = null, currentLng = null;
+let serverOnline = false;
+const charts = {};
+
+// ---------------------------------------------------------------------------
+// Server-Check
+// ---------------------------------------------------------------------------
+async function checkServer() {
+  try {
+    const r = await fetch(HISTORY_URL + '/status', { signal: AbortSignal.timeout(1500) });
+    serverOnline = r.ok;
+  } catch { serverOnline = false; }
+}
+
+// ---------------------------------------------------------------------------
+// Preise aufzeichnen
+// ---------------------------------------------------------------------------
+async function recordPrices(stations) {
+  if (!serverOnline || !stations.length) return;
+  try {
+    await fetch(HISTORY_URL + '/record', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stations }),
+      signal: AbortSignal.timeout(3000)
+    });
+  } catch {}
+}
+
+// ---------------------------------------------------------------------------
+// Hilfsfunktionen
+// ---------------------------------------------------------------------------
+function setFuel(f, btn) {
+  currentFuel = f;
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (allStations.length) renderStations();
+}
+
+function fmtPrice(p) {
+  if (!p || p <= 0) return '--';
+  const s = p.toFixed(3);
+  return s.slice(0, -1).replace('.', ',') + '<sup>' + s.slice(-1) + '</sup>';
+}
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtTime(isoStr) {
+  const d = new Date(isoStr);
+  return d.toLocaleString('de-DE', { weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+// ---------------------------------------------------------------------------
+// Chart laden & zeichnen
+// ---------------------------------------------------------------------------
+async function loadChart(id, days, container) {
+  if (!serverOnline) return;
+  container.innerHTML = '<div class="chart-hint">Lade Verlauf \u2026</div>';
+  try {
+    const r    = await fetch(`${HISTORY_URL}/history/${id}?days=${days}&fuel=${currentFuel}`, { signal: AbortSignal.timeout(3000) });
+    const data = await r.json();
+    if (!data.ok || !data.data.length) {
+      container.innerHTML = '<div class="chart-hint"><span class="rec-dot"></span>Wird aufgezeichnet \u2014 nach der n\u00E4chsten Suche erscheint hier der Verlauf.</div>';
+      return;
+    }
+    drawChart(id, container, data.data);
+  } catch {
+    container.innerHTML = '<div class="chart-hint">Server nicht erreichbar</div>';
+  }
+}
+
+function drawChart(id, container, rows) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  container.innerHTML = '<canvas style="width:100%;height:100%;display:block"></canvas>';
+  const canvas = container.querySelector('canvas');
+  const labels = rows.map(r => fmtTime(r.date));
+  const values = rows.map(r => r.price);
+  const min    = Math.min(...values), max = Math.max(...values);
+  const pad    = (max - min) * 0.4 || 0.02;
+
+  charts[id] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: '#3db87a',
+        borderWidth: 1.5,
+        pointRadius: rows.length < 20 ? 3 : 0,
+        pointHoverRadius: 4,
+        pointBackgroundColor: '#3db87a',
+        fill: true,
+        backgroundColor: ctx => {
+          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 90);
+          g.addColorStop(0, 'rgba(61,184,122,0.15)');
+          g.addColorStop(1, 'rgba(61,184,122,0)');
+          return g;
+        },
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 300 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1f1f1f',
+          borderColor: '#333',
+          borderWidth: 1,
+          titleColor: '#888',
+          bodyColor: '#e8e8e6',
+          callbacks: { label: ctx => ctx.parsed.y.toFixed(3).replace('.', ',') + ' \u20AC' }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#555', font: { size: 10 }, maxRotation: 0, maxTicksLimit: 6 },
+          grid: { color: '#1a1a1a' }
+        },
+        y: {
+          min: +(min - pad).toFixed(3),
+          max: +(max + pad).toFixed(3),
+          ticks: { color: '#555', font: { size: 10 }, count: 4, callback: v => v.toFixed(2).replace('.', ',') + '\u20AC' },
+          grid: { color: '#1a1a1a' }
+        }
+      }
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Stationen rendern
+// ---------------------------------------------------------------------------
+function renderStations() {
+  const list = document.getElementById('stationList');
+  const sr   = document.getElementById('statsRow');
+  const sort = document.getElementById('sortSelect').value;
+  let st = allStations.filter(s => s[currentFuel] && s[currentFuel] > 0);
+
+  if (!st.length) {
+    sr.style.display = 'none';
+    document.getElementById('resultCount').textContent = '';
+    list.innerHTML = '<div class="status">Keine Preise gefunden.</div>';
+    return;
+  }
+
+  const prices = st.map(s => s[currentFuel]);
+  const minP = Math.min(...prices), maxP = Math.max(...prices);
+  const avgP = prices.reduce((a, b) => a + b, 0) / prices.length;
+  const minS = st.find(s => s[currentFuel] === minP);
+  const maxS = st.find(s => s[currentFuel] === maxP);
+
+  sr.innerHTML =
+    '<div class="stat"><div class="stat-lbl">G\u00FCnstigster</div><div class="stat-val">' + fmtPrice(minP) + ' \u20AC</div><div class="stat-sub">' + esc(minS?.brand || minS?.name || '') + '</div></div>' +
+    '<div class="stat"><div class="stat-lbl">Durchschnitt</div><div class="stat-val">' + fmtPrice(avgP) + ' \u20AC</div><div class="stat-sub">' + st.length + ' Stationen</div></div>' +
+    '<div class="stat"><div class="stat-lbl">Teuerster</div><div class="stat-val">' + fmtPrice(maxP) + ' \u20AC</div><div class="stat-sub">' + esc(maxS?.brand || maxS?.name || '') + '</div></div>';
+  sr.style.display = 'grid';
+
+  if (sort === 'price')     st.sort((a, b) => a[currentFuel] - b[currentFuel]);
+  else if (sort === 'dist') st.sort((a, b) => (a.dist || 99) - (b.dist || 99));
+  else                      st.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+  document.getElementById('resultCount').textContent = st.length + ' Tankstellen gefunden';
+
+  list.innerHTML = st.map((s, i) => {
+    const cheap   = s[currentFuel] === minP;
+    const name    = esc(s.brand || s.name || 'Unbekannt');
+    const addr    = esc([s.street, s.houseNumber, s.place].filter(Boolean).join(' '));
+    const dist    = s.dist ? s.dist.toFixed(1) + ' km' : '';
+    const openCls = s.isOpen ? 'open' : 'closed';
+    const openTxt = s.isOpen ? 'Ge\u00F6ffnet' : 'Geschlossen';
+
+    const chartSection = serverOnline ? `
+      <div class="chart-wrap">
+        <div class="chart-header">
+          <span class="chart-title">Preisverlauf</span>
+          <div class="chart-ctrl">
+            <label>Zeitraum</label>
+            <input type="range" min="1" max="7" value="2" step="1"
+                   oninput="onDaysChange('${s.id}',this)">
+            <span id="dayslbl-${s.id}">2 Tage</span>
+          </div>
+        </div>
+        <div class="chart-container" id="chartcon-${s.id}"></div>
+      </div>` : '';
+
+    return `<div class="scard${cheap ? ' best' : ''}">
+      <div class="scard-top" onclick="toggleChart('${s.id}')">
+        <div class="rank">${i + 1}</div>
+        <div class="sinfo">
+          <div class="sname">${name}${cheap ? '<span class="badge-cheap">g\u00FCnstigster</span>' : ''}</div>
+          <div class="saddr">${addr}</div>
+        </div>
+        <div class="sright">
+          <div class="price">${fmtPrice(s[currentFuel])} \u20AC</div>
+          ${dist ? '<div class="dist">' + dist + '</div>' : ''}
+          <div class="${openCls}">${openTxt}</div>
+        </div>
+      </div>
+      <div id="chartarea-${s.id}" style="display:none">${chartSection}</div>
+    </div>`;
+  }).join('');
+}
+
+// ---------------------------------------------------------------------------
+// Chart aufklappen
+// ---------------------------------------------------------------------------
+function toggleChart(id) {
+  const area = document.getElementById('chartarea-' + id);
+  if (!area) return;
+  const open = area.style.display === 'none';
+  area.style.display = open ? 'block' : 'none';
+  if (open && serverOnline) {
+    const con  = document.getElementById('chartcon-' + id);
+    const days = 2;
+    if (con) loadChart(id, days, con);
+  }
+}
+
+function onDaysChange(id, slider) {
+  const days = parseInt(slider.value);
+  const lbl  = document.getElementById('dayslbl-' + id);
+  if (lbl) lbl.textContent = days + (days === 1 ? ' Tag' : ' Tage');
+  const con = document.getElementById('chartcon-' + id);
+  if (con) loadChart(id, days, con);
+}
+
+// ---------------------------------------------------------------------------
+// Geocoding + API
+// ---------------------------------------------------------------------------
+async function geocode(city) {
+  const res  = await fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(city) + '&format=json&limit=1&countrycodes=de', { headers: { 'Accept-Language': 'de', 'User-Agent': 'TankpreiseApp/1.0' } });
+  const data = await res.json();
+  if (!data.length) throw new Error('Ort nicht gefunden: ' + city);
+  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+}
+
+async function fetchStations() {
+  const city   = document.getElementById('cityInput').value.trim();
+  const radius = parseInt(document.getElementById('radiusSlider').value);
+  const list   = document.getElementById('stationList');
+  document.getElementById('statsRow').style.display = 'none';
+  document.getElementById('resultCount').textContent = '';
+  Object.values(charts).forEach(c => c.destroy());
+  Object.keys(charts).forEach(k => delete charts[k]);
+
+  if (!city && !currentLat) { list.innerHTML = '<div class="err">Bitte Stadt oder PLZ eingeben.</div>'; return; }
+  list.innerHTML = '<div class="status">Preise werden geladen \u2026</div>';
+
+  await checkServer();
+
+  try {
+    if (city) { const geo = await geocode(city); currentLat = geo.lat; currentLng = geo.lng; }
+    const url  = 'https://creativecommons.tankerkoenig.de/json/list.php?lat=' + currentLat + '&lng=' + currentLng + '&rad=' + radius + '&sort=dist&type=all&apikey=' + API_KEY;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.message || 'API-Fehler');
+    allStations = data.stations || [];
+    renderStations();
+    recordPrices(allStations); // Preise im Hintergrund aufzeichnen
+  } catch (err) {
+    list.innerHTML = '<div class="err">' + esc(err.message) + '</div>';
+  }
+}
+
+function useLocation() {
+  if (!navigator.geolocation) { alert('Geolocation nicht unterst\u00FCtzt.'); return; }
+  document.getElementById('stationList').innerHTML = '<div class="status">Standort wird ermittelt \u2026</div>';
+  navigator.geolocation.getCurrentPosition(async pos => {
+    currentLat = pos.coords.latitude; currentLng = pos.coords.longitude;
+    try {
+      const res = await fetch('https://nominatim.openstreetmap.org/reverse?lat=' + currentLat + '&lon=' + currentLng + '&format=json', { headers: { 'Accept-Language': 'de', 'User-Agent': 'TankpreiseApp/1.0' } });
+      const d   = await res.json();
+      document.getElementById('cityInput').value = d.address?.city || d.address?.town || d.address?.village || 'Mein Standort';
+    } catch {}
+    fetchStations();
+  }, () => { document.getElementById('stationList').innerHTML = '<div class="err">Standort konnte nicht ermittelt werden.</div>'; });
+}
+
+document.getElementById('cityInput').addEventListener('keydown', e => { if (e.key === 'Enter') fetchStations(); });
+</script>
+</body>
+</html>
