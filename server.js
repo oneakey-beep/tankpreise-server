@@ -60,5 +60,5 @@ app.get('/status', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`\n[server] Laeuft auf http://localhost:${PORT}\n`);
+  console.log(`[server] Laeuft auf http://localhost:${PORT}`);
 });
