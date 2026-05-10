@@ -65,6 +65,8 @@ body{background:#0f0f0f;color:#e8e8e6;font-family:-apple-system,BlinkMacSystemFo
 .status{text-align:center;padding:3rem 1rem;color:#444;font-size:14px}
 .err{padding:.875rem 1.125rem;color:#e07a5f;font-size:13px;background:#1e1410;border-radius:9px;border:0.5px solid #3a2010}
 .rec-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#3db87a;margin-right:5px;vertical-align:middle;opacity:.8}
+.map-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#3db87a;background:transparent;border:none;cursor:pointer;padding:0;margin-top:3px;opacity:.8}
+.map-btn:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -115,7 +117,7 @@ body{background:#0f0f0f;color:#e8e8e6;font-family:-apple-system,BlinkMacSystemFo
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
 const API_KEY     = 'f8fb6efd-3038-49bf-b978-acd4c90b0fec';
-const HISTORY_URL = 'https://tankpreise-server-production.up.railway.app';
+const HISTORY_URL = 'http://localhost:3001';
 
 let currentFuel = 'e5', allStations = [], currentLat = null, currentLng = null;
 let serverOnline = false;
@@ -316,6 +318,10 @@ function renderStations() {
           <div class="price">${fmtPrice(s[currentFuel])} \u20AC</div>
           ${dist ? '<div class="dist">' + dist + '</div>' : ''}
           <div class="${openCls}">${openTxt}</div>
+          <button class="map-btn" onclick="openMaps(event,'${esc(addr)}','${s.lat||''}','${s.lng||''}')">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            Karte
+          </button>
         </div>
       </div>
       <div id="chartarea-${s.id}" style="display:none">${chartSection}</div>
@@ -399,6 +405,22 @@ function useLocation() {
 }
 
 document.getElementById('cityInput').addEventListener('keydown', e => { if (e.key === 'Enter') fetchStations(); });
+
+function openMaps(e, addr, lat, lng) {
+  e.stopPropagation();
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  let url;
+  if (lat && lng) {
+    url = isIOS
+      ? `maps://maps.apple.com/?q=${encodeURIComponent(addr)}&ll=${lat},${lng}`
+      : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  } else {
+    url = isIOS
+      ? `maps://maps.apple.com/?q=${encodeURIComponent(addr)}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
+  }
+  window.open(url, '_blank');
+}
 </script>
 </body>
 </html>
