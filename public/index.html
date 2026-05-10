@@ -408,17 +408,9 @@ document.getElementById('cityInput').addEventListener('keydown', e => { if (e.ke
 
 function openMaps(e, addr, lat, lng) {
   e.stopPropagation();
-  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-  let url;
-  if (lat && lng) {
-    url = isIOS
-      ? `maps://maps.apple.com/?q=${encodeURIComponent(addr)}&ll=${lat},${lng}`
-      : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-  } else {
-    url = isIOS
-      ? `maps://maps.apple.com/?q=${encodeURIComponent(addr)}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
-  }
+  const url = (lat && lng)
+    ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
   window.open(url, '_blank');
 }
 </script>
